@@ -1,0 +1,16 @@
+{
+  "name": "earth-station-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/margostino/earth-station-api",
+  "author": "margostino <https://margostino.com/>",
+  "license": "MIT",
+  "dependencies": {
+    "vercel": "^24.0.0"
+  },
+  "scripts": {
+    "setup": "yarn vercel login && yarn vercel link",
+    "start": "yarn vercel dev",
+    "dev": "yarn start"
+  }
+}
