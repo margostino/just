@@ -1,8 +1,8 @@
 package nasa
 
 import (
-	"github.com/margostino/earth-station-api/config"
-	"github.com/margostino/earth-station-api/nasa"
+	"github.com/margostino/just/config"
+	"github.com/margostino/just/nasa"
 	"log"
 	"net/http"
 	"strings"
