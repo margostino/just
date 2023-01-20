@@ -19,5 +19,7 @@
 
 data/
 configuration/configuration.yml
+.env
 
 .DS_Store
+.vercel
