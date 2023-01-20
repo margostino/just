@@ -14,6 +14,7 @@ import (
 )
 
 var configuration = config.GetConfig()
+var baseUrl = configuration["url"]
 
 func Jobs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -31,7 +32,7 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 		}
 
 		index += factor
-		url := getUrl(r, index)
+		url := collector.GetUrl(r, baseUrl, index)
 
 		if common.IsError(err, "error calling upstream") {
 			w.WriteHeader(http.StatusInternalServerError)
