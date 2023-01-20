@@ -24,7 +24,7 @@ func GetConfig() map[string]string {
 			for _, row := range resp.Values {
 				if len(row) == 5 {
 					config["url"] = row[0].(string)
-					config["pagination_factor"] = row[1].(string)
+					config["paginationFactor"] = row[1].(string)
 					config["keywords"] = row[2].(string)
 					config["location"] = row[3].(string)
 					config["timePeriod"] = row[4].(string)
