@@ -6,14 +6,22 @@ import (
 	"net/http"
 )
 
-func GetUrl(r *http.Request, baseUrl string, index int) string {
-	params := getQueryParams(r)
+func GetUrl(configuration map[string]string, index int) string {
+	//params := getQueryParams(r)
+	var baseUrl = sanitizeParameter(configuration, "url")
+	var keywords = sanitizeParameter(configuration, "keywords")
+	var location = sanitizeParameter(configuration, "location")
+	var timePeriod = sanitizeParameter(configuration, "timePeriod")
 	pagination := fmt.Sprintf("position=1&pageNum=0&start=%d", index)
-	return fmt.Sprintf("%s?keywords=%s&location=%s&f_TPR=%s&%s", baseUrl, params.Keywords, params.Location, params.TimePeriod, pagination)
+	return fmt.Sprintf("%s?keywords=%s&location=%s&f_TPR=%s&%s", baseUrl, keywords, location, timePeriod, pagination)
 }
 
 func getQueryParam(r *http.Request, param string) string {
 	return common.NewString(r.URL.Query().Get(param)).ReplaceAll(" ", "%20").Value()
+}
+
+func sanitizeParameter(configuration map[string]string, param string) string {
+	return common.NewString(configuration[param]).ReplaceAll(" ", "%20").Value()
 }
 
 func getQueryParams(r *http.Request) *QueryParams {
