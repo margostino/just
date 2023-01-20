@@ -9,7 +9,7 @@ import (
 
 func getUrl(r *http.Request, index int) string {
 	params := getQueryParams(r)
-	baseUrl := "dummy"
+	baseUrl := configuration["url"]
 	pagination := fmt.Sprintf("position=1&pageNum=0&start=%d", index)
 	return fmt.Sprintf("%s?keywords=%s&location=%s&f_TPR=%s&%s", baseUrl, params.Keywords, params.Location, params.TimePeriod, pagination)
 }
