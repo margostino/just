@@ -22,12 +22,13 @@ func GetConfig() map[string]string {
 
 		if !common.IsError(err, "unable to retrieve data from sheet") && len(resp.Values) > 0 {
 			for _, row := range resp.Values {
-				if len(row) == 5 {
+				if len(row) == 6 {
 					config["url"] = row[0].(string)
 					config["paginationFactor"] = row[1].(string)
 					config["keywords"] = row[2].(string)
 					config["location"] = row[3].(string)
 					config["timePeriod"] = row[4].(string)
+					config["calls"] = row[5].(string)
 				} else {
 					log.Printf("Configuration sheet for Feed Urls is not valid. It must have 3 columns. It has %d\n", len(row))
 				}

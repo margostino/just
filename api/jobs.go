@@ -2,15 +2,12 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/margostino/just/collector"
 	"github.com/margostino/just/common"
 	"github.com/margostino/just/config"
 	"github.com/margostino/just/domain"
-	"github.com/margostino/just/parser"
-	"github.com/margostino/just/processor"
+	"github.com/margostino/just/executor"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 type QueryParams struct {
@@ -18,15 +15,15 @@ type QueryParams struct {
 	Location         string
 	TimePeriod       string
 	PaginationFactor string
+	Calls            string
 }
 
 var configuration = config.GetConfig()
 
 func Jobs(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	var jobs = make([]*domain.JobPosition, 0)
-	var isEnd bool
-	var index int
+
+	w.Header().Set("Content-Type", "application/json")
 
 	params := getQueryParams(r)
 	if params.Keywords != "" {
@@ -41,51 +38,27 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 	if params.PaginationFactor != "" {
 		configuration["paginationFactor"] = params.PaginationFactor
 	}
-
-	for ok := true; ok; ok = !isEnd {
-		factor, err := strconv.Atoi(configuration["paginationFactor"])
-
-		if common.IsError(err, "invalid configuration when parsing") {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		index += factor
-		url := collector.GetUrl(configuration, index)
-
-		if common.IsError(err, "error calling upstream") {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		content, err, statusCode := collector.Call(url)
-
-		if statusCode == 400 || statusCode == 429 {
-			break
-		}
-		
-		if common.IsError(err, "error status from upstream") {
-			w.WriteHeader(statusCode)
-			return
-		}
-
-		tokens := parser.Parse(string(content))
-		partialJobs := processor.Process(tokens)
-		jobs = append(jobs, partialJobs...)
-
-		if len(jobs) == 0 {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
+	if params.Calls != "" {
+		configuration["calls"] = params.Calls
 	}
 
-	jsonResp, err := json.Marshal(jobs)
-	if err != nil {
-		log.Printf("Error happened in JSON marshal. Err: %s\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
+	//ctx, cancel := context.WithCancel(context.Background())
+	//defer cancel()
+
+	jobs = executor.AsyncCall(configuration)
+
+	if len(jobs) == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
 	} else {
-		w.WriteHeader(http.StatusOK)
-		w.Write(jsonResp)
+		jsonResp, err := json.Marshal(jobs)
+		if err != nil {
+			log.Printf("Error happened in JSON marshal. Err: %s\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Write(jsonResp)
+		}
 	}
 
 	return
@@ -100,7 +73,10 @@ func getQueryParams(r *http.Request) *QueryParams {
 	location := getQueryParam(r, "location")
 	timePeriod := getQueryParam(r, "timePeriod")
 	paginationFactor := getQueryParam(r, "paginationFactor")
+	calls := getQueryParam(r, "calls")
+
 	return &QueryParams{
+		Calls:            calls,
 		Keywords:         keywords,
 		Location:         location,
 		TimePeriod:       timePeriod,

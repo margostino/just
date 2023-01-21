@@ -1,16 +1,13 @@
-package api
+package executor
 
 import (
-	"encoding/json"
 	"github.com/margostino/just/client"
 	"github.com/margostino/just/common"
-	"github.com/margostino/just/config"
 	"github.com/margostino/just/domain"
 	"github.com/margostino/just/parser"
 	"github.com/margostino/just/processor"
-	"log"
-	"net/http"
 	"strconv"
+	"sync"
 )
 
 type QueryParams struct {
@@ -20,90 +17,64 @@ type QueryParams struct {
 	PaginationFactor string
 }
 
-var configuration = config.GetConfig()
-
-func Jobs(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+func AsyncCall(config map[string]string) []*domain.JobPosition {
+	var offset int
+	var wg sync.WaitGroup
 	var jobs = make([]*domain.JobPosition, 0)
-	var isEnd bool
-	var index int
 
-	params := getQueryParams(r)
-	if params.Keywords != "" {
-		configuration["keywords"] = params.Keywords
-	}
-	if params.Location != "" {
-		configuration["location"] = params.Location
-	}
-	if params.TimePeriod != "" {
-		configuration["timePeriod"] = params.TimePeriod
-	}
-	if params.PaginationFactor != "" {
-		configuration["paginationFactor"] = params.PaginationFactor
+	calls, err := strconv.Atoi(config["calls"])
+	if common.IsError(err, "invalid configuration for calls") {
+		return jobs
 	}
 
-	for ok := true; ok; ok = !isEnd {
-		factor, err := strconv.Atoi(configuration["paginationFactor"])
+	jobsChannel := make(chan []*domain.JobPosition, calls)
+	defer close(jobsChannel)
+
+	//go func() {
+	//	for partial := range jobsChannel {
+	//		log.Printf("Got partial results: %d", len(partial))
+	//		jobs = append(jobs, partial...)
+	//	}
+	//}()
+
+	wg.Add(calls)
+	for i := 1; i <= calls; i++ {
+
+		factor, err := strconv.Atoi(config["paginationFactor"])
 
 		if common.IsError(err, "invalid configuration when parsing") {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+			wg.Done()
+			return jobs
 		}
 
-		index += factor
-		url := client.GetUrl(configuration, index)
+		offset += factor
+		go func(i int) {
+			defer wg.Done()
+			url := client.GetUrl(config, i)
+			content, err, _ := client.Call(url)
+			common.SilentCheck(err, "error calling upstream")
 
-		if common.IsError(err, "error calling upstream") {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+			tokens := parser.Parse(string(content))
+			if len(tokens) > 0 {
+				partialJobs := processor.Process(tokens)
+				//log.Printf("jobs from offset %d: %d", i, len(partialJobs))
+				jobsChannel <- partialJobs
+			} else {
+				jobsChannel <- make([]*domain.JobPosition, 0)
+				//log.Printf("NO jobs from offset %d", i)
+			}
 
-		content, err, statusCode := client.Call(url)
+		}(offset)
 
-		if statusCode == 400 || statusCode == 429 {
-			break
-		}
-
-		if common.IsError(err, "error status from upstream") {
-			w.WriteHeader(statusCode)
-			return
-		}
-
-		tokens := parser.Parse(string(content))
-		partialJobs := processor.Process(tokens)
-		jobs = append(jobs, partialJobs...)
-
-		if len(jobs) == 0 {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
 	}
 
-	jsonResp, err := json.Marshal(jobs)
-	if err != nil {
-		log.Printf("Error happened in JSON marshal. Err: %s\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		w.WriteHeader(http.StatusOK)
-		w.Write(jsonResp)
+	for i := 1; i <= calls; i++ {
+		partial := <-jobsChannel
+		//log.Printf("Got partial results: %d", len(partial))
+		jobs = append(jobs, partial...)
 	}
 
-	return
-}
+	wg.Wait()
 
-func getQueryParam(r *http.Request, param string) string {
-	return common.NewString(r.URL.Query().Get(param)).ReplaceAll(" ", "%20").Value()
-}
-
-func getQueryParams(r *http.Request) *QueryParams {
-	keywords := getQueryParam(r, "keywords")
-	location := getQueryParam(r, "location")
-	timePeriod := getQueryParam(r, "timePeriod")
-	paginationFactor := getQueryParam(r, "paginationFactor")
-	return &QueryParams{
-		Keywords:         keywords,
-		Location:         location,
-		TimePeriod:       timePeriod,
-		PaginationFactor: paginationFactor,
-	}
+	return jobs
 }

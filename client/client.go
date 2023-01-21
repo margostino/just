@@ -1,4 +1,4 @@
-package collector
+package client
 
 import (
 	"errors"
@@ -17,9 +17,6 @@ func Call(url string) ([]byte, error, int) {
 		return nil, errors.New("upstream call failed without status code"), http.StatusInternalServerError
 	}
 
-	if response.StatusCode == 400 {
-		return nil, nil, response.StatusCode
-	}
 	if response.StatusCode != 200 {
 		log.Printf("upstream failed with status code: %d\n", response.StatusCode)
 		return nil, errors.New("upstream call failed"), response.StatusCode
@@ -32,5 +29,5 @@ func Call(url string) ([]byte, error, int) {
 		return nil, errors.New("response parse failed"), http.StatusInternalServerError
 	}
 
-	return content, nil, 0
+	return content, nil, http.StatusOK
 }
