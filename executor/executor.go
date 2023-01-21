@@ -6,6 +6,7 @@ import (
 	"github.com/margostino/just/domain"
 	"github.com/margostino/just/parser"
 	"github.com/margostino/just/processor"
+	"log"
 	"strconv"
 	"sync"
 )
@@ -61,7 +62,7 @@ func AsyncCall(config map[string]string) []*domain.JobPosition {
 				jobsChannel <- partialJobs
 			} else {
 				jobsChannel <- make([]*domain.JobPosition, 0)
-				//log.Printf("NO jobs from offset %d", i)
+				log.Printf("NO jobs from offset %d", i)
 			}
 
 		}(offset)

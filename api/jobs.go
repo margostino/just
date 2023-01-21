@@ -18,6 +18,11 @@ type QueryParams struct {
 	Calls            string
 }
 
+const (
+	LastDay  = "r86400"
+	LastWeek = "r604800"
+)
+
 var configuration = config.GetConfig()
 
 func Jobs(w http.ResponseWriter, r *http.Request) {
@@ -74,6 +79,15 @@ func getQueryParams(r *http.Request) *QueryParams {
 	timePeriod := getQueryParam(r, "timePeriod")
 	paginationFactor := getQueryParam(r, "paginationFactor")
 	calls := getQueryParam(r, "calls")
+
+	switch timePeriod {
+	case "1w":
+		timePeriod = LastWeek
+		break
+	case "1d":
+		timePeriod = LastDay
+		break
+	}
 
 	return &QueryParams{
 		Calls:            calls,
