@@ -54,10 +54,9 @@ func Bot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := Response{
-		Msg:       reply,
-		Method:    "sendMessage",
-		ChatID:    update.Message.Chat.ID,
-		ParseMode: "ParseMode.HTML",
+		Msg:    reply,
+		Method: "sendMessage",
+		ChatID: update.Message.Chat.ID,
 	}
 
 	message, _ := json.Marshal(data)
