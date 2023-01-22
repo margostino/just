@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -16,6 +17,8 @@ func IsAuthorized(r *http.Request) bool {
 func IsAdmin(r *http.Request) bool {
 	botSecret := os.Getenv("API_SECRET")
 	requestSecret := r.Header.Get("X-Telegram-Bot-Api-Secret-Token")
+	log.Printf("API S: %s", botSecret)
+	log.Printf("Req S: %s", requestSecret)
 	return requestSecret == botSecret
 }
 
