@@ -14,7 +14,7 @@ func IsAuthorized(r *http.Request) bool {
 }
 
 func IsAdmin(r *http.Request) bool {
-	botSecret := os.Getenv("API_SECRET")
+	botSecret := os.Getenv("JUST_API_SECRET")
 	requestSecret := r.Header.Get("X-Telegram-Bot-Api-Secret-Token")
 	return requestSecret == botSecret
 }
