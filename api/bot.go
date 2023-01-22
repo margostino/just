@@ -15,7 +15,7 @@ type Response struct {
 	Msg       string `json:"text"`
 	ChatID    int64  `json:"chat_id"`
 	Method    string `json:"method"`
-	ParseMode string `json:"parse_mode	"`
+	ParseMode string `json:"parse_mode"`
 }
 
 var botApi *tgbotapi.BotAPI
