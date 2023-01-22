@@ -6,6 +6,10 @@
     "api/jobs.go": {
       "memory": 1024,
       "maxDuration": 5
+    },
+    "api/bot.go": {
+      "memory": 1024,
+      "maxDuration": 5
     }
   }
 }
