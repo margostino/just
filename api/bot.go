@@ -12,9 +12,10 @@ import (
 )
 
 type Response struct {
-	Msg    string `json:"text"`
-	ChatID int64  `json:"chat_id"`
-	Method string `json:"method"`
+	Msg       string `json:"text"`
+	ChatID    int64  `json:"chat_id"`
+	Method    string `json:"method"`
+	ParseMode string `json:"parse_mode	"`
 }
 
 var botApi *tgbotapi.BotAPI
@@ -53,9 +54,10 @@ func Bot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := Response{
-		Msg:    reply,
-		Method: "sendMessage",
-		ChatID: update.Message.Chat.ID,
+		Msg:       reply,
+		Method:    "sendMessage",
+		ChatID:    update.Message.Chat.ID,
+		ParseMode: "ParseMode.HTML",
 	}
 
 	message, _ := json.Marshal(data)
