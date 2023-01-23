@@ -11,8 +11,9 @@ func GetUrl(configuration map[string]string, index int) string {
 	var keywords = sanitizeParameter(configuration, "keywords")
 	var location = sanitizeParameter(configuration, "location")
 	var timePeriod = sanitizeParameter(configuration, "timePeriod")
-	pagination := fmt.Sprintf("start=%d", index)
-	return fmt.Sprintf("%s?keywords=%s&location=%s&f_TPR=%s&%s", baseUrl, keywords, location, timePeriod, pagination)
+	var pagination = fmt.Sprintf("start=%d", index)
+	var mode = sanitizeParameter(configuration, "mode")
+	return fmt.Sprintf("%s?keywords=%s&location=%s&f_TPR=%s&f_WT=%s&%s", baseUrl, keywords, location, timePeriod, mode, pagination)
 }
 
 func sanitizeParameter(configuration map[string]string, param string) string {

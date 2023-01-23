@@ -16,12 +16,8 @@ type QueryParams struct {
 	TimePeriod       string
 	PaginationFactor string
 	Calls            string
+	Mode             string
 }
-
-const (
-	LastDay  = "r86400"
-	LastWeek = "r604800"
-)
 
 var configuration = config.GetConfig()
 
@@ -45,6 +41,9 @@ func Jobs(w http.ResponseWriter, r *http.Request) {
 	}
 	if params.Calls != "" {
 		configuration["calls"] = params.Calls
+	}
+	if params.Mode != "" {
+		configuration["mode"] = params.Mode
 	}
 
 	//ctx, cancel := context.WithCancel(context.Background())
@@ -76,23 +75,16 @@ func getQueryParam(r *http.Request, param string) string {
 func getQueryParams(r *http.Request) *QueryParams {
 	keywords := getQueryParam(r, "keywords")
 	location := getQueryParam(r, "location")
-	timePeriod := getQueryParam(r, "timePeriod")
+	timePeriod := config.GetTimePeriodParam(getQueryParam(r, "timePeriod"))
+	mode := config.GetModeParam(getQueryParam(r, "mode"))
 	paginationFactor := getQueryParam(r, "paginationFactor")
 	calls := getQueryParam(r, "calls")
-
-	switch timePeriod {
-	case "1w":
-		timePeriod = LastWeek
-		break
-	case "1d":
-		timePeriod = LastDay
-		break
-	}
 
 	return &QueryParams{
 		Calls:            calls,
 		Keywords:         keywords,
 		Location:         location,
+		Mode:             mode,
 		TimePeriod:       timePeriod,
 		PaginationFactor: paginationFactor,
 	}
