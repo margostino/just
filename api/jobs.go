@@ -19,10 +19,10 @@ type QueryParams struct {
 	Mode             string
 }
 
-var configuration = config.GetConfig()
-
 func Jobs(w http.ResponseWriter, r *http.Request) {
 	var jobs = make([]*domain.JobPosition, 0)
+
+	var configuration = config.GetConfig()
 
 	w.Header().Set("Content-Type", "application/json")
 
